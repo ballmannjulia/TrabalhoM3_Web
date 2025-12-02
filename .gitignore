@@ -1,1 +1,12 @@
 web-service/node_modules/
+
+# Arquivos de dados
+web-service/data/
+web-service/uploads/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

@@ -29,7 +29,6 @@ function validarDivida(body) {
   if (!body.situacao || !['Pendente', 'Pago'].includes(body.situacao)) {
     errors.push('Situação deve ser "Pendente" ou "Pago".');
   }
-
   return errors;
 }
 

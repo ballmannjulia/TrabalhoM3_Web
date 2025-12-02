@@ -1,11 +1,330 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestão de Dívidas</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <h1 class="header-title">Sistema de Gestão de Dívidas</h1>
+        <p class="header-subtitle">
+          Controle financeiro e cadastro de pendências
+        </p>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+      <div class="container">
+        <!-- Status de Conexão -->
+        <div id="connectionStatus" class="alert alert-info hidden">
+          <span class="alert-icon">ℹ</span>
+          <span id="statusMessage">Conectado ao servidor</span>
+        </div>
+
+        <!-- Lista de Dívidas -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">Dívidas Cadastradas</h2>
+            <div class="header-actions">
+              <button
+                id="refreshBtn"
+                class="btn btn-small"
+                title="Atualizar lista"
+              >
+                Atualizar
+              </button>
+              <button id="openFormBtn" class="btn btn-primary">
+                Cadastrar dívida
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Filtros -->
+            <div class="filters">
+              <div class="filter-group">
+                <label for="filterSituacao" class="filter-label"
+                  >Filtrar por situação:</label
+                >
+                <select id="filterSituacao" class="filter-select">
+                  <option value="">Todas</option>
+                  <option value="Pendente">Pendente</option>
+                  <option value="Pago">Pago</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tabela de Dívidas -->
+            <div class="table-container">
+              <table class="table" id="debtsTable">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>CPF</th>
+                    <th>Valor</th>
+                    <th>Descrição</th>
+                    <th>Situação</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="debtsTableBody">
+                  <tr>
+                    <td colspan="7" class="table-empty">
+                      Carregando dívidas...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modal de Formulário de Cadastro -->
+    <div id="formModal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content modal-form">
+        <div class="modal-header">
+          <h3 class="modal-title">Nova Dívida</h3>
+          <button class="modal-close" id="closeFormModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="debtForm" class="form">
+            <!-- Dados do Cliente -->
+            <fieldset class="form-section">
+              <legend class="section-title">Dados do Cliente</legend>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nome" class="form-label required"
+                    >Nome Completo</label
+                  >
+                  <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    class="form-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cpf" class="form-label required">CPF</label>
+                  <input
+                    type="text"
+                    id="cpf"
+                    name="cpf"
+                    class="form-input"
+                    maxlength="14"
+                    placeholder="000.000.000-00"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email" class="form-label required">E-mail</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-input"
+                    placeholder="exemplo@email.com"
+                    required
+                  />
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Endereço (Opcional) -->
+            <fieldset class="form-section">
+              <legend class="section-title">Endereço (Opcional)</legend>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cep" class="form-label">CEP</label>
+                  <input
+                    type="text"
+                    id="cep"
+                    name="cep"
+                    class="form-input"
+                    maxlength="9"
+                    placeholder="00000-000"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="numero" class="form-label">Número</label>
+                  <input
+                    type="text"
+                    id="numero"
+                    name="numero"
+                    class="form-input"
+                    placeholder="123"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="complemento" class="form-label"
+                    >Complemento</label
+                  >
+                  <input
+                    type="text"
+                    id="complemento"
+                    name="complemento"
+                    class="form-input"
+                    placeholder="Apto 101"
+                  />
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Dados da Dívida -->
+            <fieldset class="form-section">
+              <legend class="section-title">Dados da Dívida</legend>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="valor" class="form-label required"
+                    >Valor (R$)</label
+                  >
+                  <input
+                    type="number"
+                    id="valor"
+                    name="valor"
+                    class="form-input"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="situacao" class="form-label required"
+                    >Situação</label
+                  >
+                  <select
+                    id="situacao"
+                    name="situacao"
+                    class="form-input"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago">Pago</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="descricao" class="form-label required"
+                    >Descrição da Dívida</label
+                  >
+                  <textarea
+                    id="descricao"
+                    name="descricao"
+                    class="form-input"
+                    rows="3"
+                    placeholder="Descreva o objeto da dívida..."
+                    required
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="numeroProcesso" class="form-label"
+                    >Número do Processo</label
+                  >
+                  <input
+                    type="text"
+                    id="numeroProcesso"
+                    name="numeroProcesso"
+                    class="form-input"
+                    placeholder="0000000-00.0000.0.00.0000"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="comprovante" class="form-label"
+                    >Comprovante (PDF)</label
+                  >
+                  <input
+                    type="file"
+                    id="comprovante"
+                    name="comprovante"
+                    class="form-input-file"
+                    accept="application/pdf"
+                  />
+                  <small class="form-help">Máximo 5MB</small>
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Botões -->
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="cancelFormBtn"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Cadastrar Dívida
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="detailsModal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Detalhes da Dívida</h3>
+          <button class="modal-close" id="closeDetailsModal">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Conteúdo dinâmico -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast de Notificações -->
+    <div id="toast" class="toast hidden">
+      <span id="toastIcon" class="toast-icon"></span>
+      <span id="toastMessage" class="toast-message"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>
+          &copy; 2025 Sistema de Gestão de Dívidas. Programação Web - UNIVALI
+          reservados.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>

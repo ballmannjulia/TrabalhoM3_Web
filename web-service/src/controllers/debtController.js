@@ -6,8 +6,13 @@ const { readDebtsFromFile, writeDebtsToFile } = require('../utils/fileSystem');
 
 // GET /debts -> lista todas
 const getAllDebts = (req, res) => {
-  const debts = readDebtsFromFile();
-  res.json(debts);
+  try {
+    const debts = readDebtsFromFile();
+    res.status(200).json(debts);
+  } catch (err) {
+    console.error('Erro ao listar dívidas:', err);
+    res.status(500).json({ error: 'Erro ao listar dívidas.' });
+  }
 };
 
 // POST /debts -> cria nova dívida
@@ -53,32 +58,39 @@ const createDebt = (req, res) => {
     res.status(201).json(novaDivida);
   } catch (err) {
     console.error('Erro ao criar dívida:', err);
-    return res.status(500).json({ error: 'Erro interno do servidor.' });
+    res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 };
 
 // DELETE /debts/:id -> exclui dívida
 const deleteDebt = (req, res) => {
-  const { id } = req.params;
-  const debts = readDebtsFromFile();
-  const index = debts.findIndex(d => d.id === id);
+  try {
+    const { id } = req.params;
+    const debts = readDebtsFromFile();
+    const index = debts.findIndex(d => d.id === id);
 
-  if (index === -1) {
-    return res.status(404).json({ error: 'Dívida não encontrada.' });
-  }
-
-  const [removida] = debts.splice(index, 1);
-  writeDebtsToFile(debts);
-
-  // Se tiver arquivo de comprovante, tenta apagar (opcional)
-  if (removida.comprovantePath) {
-    const fullPath = path.join(__dirname, '../../', removida.comprovantePath);
-    if (fs.existsSync(fullPath)) {
-      fs.unlink(fullPath, () => {});
+    if (index === -1) {
+      return res.status(404).json({ error: 'Dívida não encontrada.' });
     }
-  }
 
-  res.json({ message: 'Dívida removida com sucesso.', id });
+    const [removida] = debts.splice(index, 1);
+    writeDebtsToFile(debts);
+
+    // Se tiver arquivo de comprovante, tenta apagar (opcional)
+    if (removida.comprovantePath) {
+      const fullPath = path.join(__dirname, '../../', removida.comprovantePath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlink(fullPath, (err) => {
+          if (err) console.error('Erro ao apagar arquivo:', err);
+        });
+      }
+    }
+
+    res.status(200).json({ message: 'Dívida removida com sucesso.', id });
+  } catch (err) {
+    console.error('Erro ao deletar dívida:', err);
+    res.status(500).json({ error: 'Erro ao deletar dívida.' });
+  }
 };
 
 module.exports = { getAllDebts, createDebt, deleteDebt };
