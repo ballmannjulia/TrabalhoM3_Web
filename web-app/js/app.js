@@ -1,5 +1,6 @@
 let debts = [];
 let currentFilter = '';
+let debtToDeleteId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
@@ -31,12 +32,18 @@ function initializeEventListeners() {
     // Modal de detalhes
     document.getElementById('closeDetailsModal').addEventListener('click', closeDetailsModal);
 
+     // Modal de confirmação de exclusão
+    document.getElementById('confirmDeleteBtn').addEventListener('click', handleConfirmDelete);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeConfirmModal);
+    document.getElementById('closeConfirmModal').addEventListener('click', closeConfirmModal);
+
     // Fechar modais clicando no overlay
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 closeFormModal();
                 closeDetailsModal();
+                closeConfirmModal(); // <-- adiciona o fechamento do modal de confirmação
             }
         });
     });
@@ -60,6 +67,28 @@ function closeDetailsModal() {
     document.getElementById('detailsModal').classList.add('hidden');
     document.body.style.overflow = '';
 }
+
+function openConfirmModal(debt) {
+    debtToDeleteId = debt.id;
+
+    const message = document.getElementById('confirmMessage');
+    message.innerHTML =
+        `Tem certeza que deseja excluir a dívida de <strong>${escapeHtml(debt.cliente.nome)}</strong>?<br>` +
+        `Valor: <strong>${formatCurrency(debt.valor)}</strong><br>` +
+        `<small>Esta ação não pode ser desfeita.</small>`;
+
+    const modal = document.getElementById('confirmModal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    debtToDeleteId = null;
+}
+
 
 // TOAST DE NOTIFICAÇÕES
 function showToast(message, type = 'success') {
@@ -226,6 +255,29 @@ async function loadDebts() {
     }
 }
 
+async function handleConfirmDelete() {
+    if (!debtToDeleteId) return;
+
+    const id = debtToDeleteId;
+    closeConfirmModal();
+
+    const debt = debts.find(d => d.id === id);
+    if (!debt) {
+        showToast('Dívida não encontrada', 'error');
+        return;
+    }
+
+    try {
+        await API.deleteDebt(id);
+        //showToast('Dívida excluída com sucesso!', 'success');
+        await loadDebts();
+    } catch (error) {
+        console.error('Erro ao excluir:', error);
+        showToast(error.message || 'Erro ao excluir dívida', 'error');
+    }
+}
+
+
 function renderDebts() {
     const tbody = document.getElementById('debtsTableBody');
 
@@ -353,27 +405,17 @@ function showDetailsModal() {
 }
 
 // EXCLUSÃO DE DÍVIDA
-async function deleteDebt(id) {
+function deleteDebt(id) {
     const debt = debts.find(d => d.id === id);
-    if (!debt) return;
-
-    const confirmed = confirm(
-        `Tem certeza que deseja excluir a dívida de ${debt.cliente.nome}?\n\n` +
-        `Valor: ${formatCurrency(debt.valor)}\n` +
-        `Esta ação não pode ser desfeita.`
-    );
-
-    if (!confirmed) return;
-
-    try {
-        await API.deleteDebt(id);
-        showToast('Dívida excluída com sucesso!', 'success');
-        await loadDebts();
-    } catch (error) {
-        console.error('Erro ao excluir:', error);
-        showToast(error.message || 'Erro ao excluir dívida', 'error');
+    if (!debt) {
+        showToast('Dívida não encontrada', 'error');
+        return;
     }
+
+    // Agora ela só abre o modal de confirmação
+    openConfirmModal(debt);
 }
+
 
 // UTILITÁRIOS
 function formatCurrency(value) {

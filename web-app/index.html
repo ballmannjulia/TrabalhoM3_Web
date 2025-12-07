@@ -292,7 +292,7 @@
       </div>
     </div>
 
-    <!-- Modal de Detalhes -->
+      <!-- Modal de Detalhes -->
     <div id="detailsModal" class="modal hidden">
       <div class="modal-overlay"></div>
       <div class="modal-content">
@@ -302,6 +302,38 @@
         </div>
         <div class="modal-body" id="modalBody">
           <!-- Conteúdo dinâmico -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="confirmModal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Confirmar exclusão</h3>
+          <button class="modal-close" id="closeConfirmModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmMessage">
+            Tem certeza que deseja excluir esta dívida?
+          </p>
+        </div>
+        <div class="modal-footer form-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="cancelDeleteBtn"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            id="confirmDeleteBtn"
+          >
+            Excluir
+          </button>
         </div>
       </div>
     </div>
